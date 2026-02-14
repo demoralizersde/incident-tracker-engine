@@ -1,0 +1,47 @@
+package incidentengine.exception;
+
+import incidentengine.dto.ApiResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(InvalidRequestException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidRequest(
+            InvalidRequestException ex) {
+
+        return ResponseEntity.badRequest().body(
+                new ApiResponse<>(false, 400,
+                        ex.getMessage(), null)
+        );
+    }
+
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleValidation(
+            MethodArgumentNotValidException ex) {
+
+        String message = ex.getBindingResult()
+                .getFieldErrors()
+                .get(0)
+                .getDefaultMessage();
+
+        return ResponseEntity.badRequest().body(
+                new ApiResponse<>(false, 400,
+                        message, null)
+        );
+    }
+
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Void>> handleGeneric(Exception ex) {
+
+        return ResponseEntity.internalServerError().body(
+                new ApiResponse<>(false, 500,
+                        "Something went wrong...", null)
+        );
+    }
+}
