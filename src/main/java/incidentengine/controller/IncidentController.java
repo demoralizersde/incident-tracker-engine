@@ -3,11 +3,14 @@ package incidentengine.controller;
 
 import incidentengine.dto.ApiResponse;
 import incidentengine.dto.IncidentCreateRequestDto;
+import incidentengine.dto.PageResponseDto;
 import incidentengine.entity.Incident;
 import incidentengine.service.IncidentService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,7 +31,37 @@ public class IncidentController {
                 new ApiResponse<>(true, 200,
                         "Incident created successfully", incident);
 
-
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<PageResponseDto<Incident>>> getIncidents(
+            @RequestParam(required = false) String service,
+            @RequestParam(required = false) String severity,
+            @RequestParam(required = false) String status,
+            Pageable pageable) {
+
+        Page<Incident> incidents =
+                incidentService.searchIncidents(service, severity, status, pageable);
+
+        PageResponseDto<Incident> pageResponse = new PageResponseDto<>(incidents);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, 200,
+                        "Incidents fetched successfully", pageResponse)
+        );
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<Incident>> getIncidentById(
+            @PathVariable Long id) {
+
+        Incident incident = incidentService.getIncidentById(id);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, 200,
+                        "Incident fetched successfully", incident)
+        );
+    }
+
 }

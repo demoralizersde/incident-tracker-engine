@@ -3,10 +3,13 @@ package incidentengine.implementation;
 import incidentengine.dto.IncidentCreateRequestDto;
 import incidentengine.entity.Incident;
 import incidentengine.enums.IncidentEnums;
+import incidentengine.exception.ResourceNotFoundException;
 import incidentengine.repository.IncidentRepository;
 import incidentengine.service.IncidentService;
 import incidentengine.validator.EnumValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import java.util.Date;
 
@@ -37,5 +40,26 @@ public class IncidentServiceImpl implements IncidentService {
 
         return incidentRepository.save(incident);
     }
+
+    @Override
+    public Page<Incident> searchIncidents(
+            String service,
+            String severity,
+            String status,
+            Pageable pageable) {
+
+        return incidentRepository.searchIncidents(
+                service, severity, status, pageable);
+    }
+
+    @Override
+    public Incident getIncidentById(Long id) {
+
+        return incidentRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Incident not found with id: " + id));
+    }
+
+
 
 }
