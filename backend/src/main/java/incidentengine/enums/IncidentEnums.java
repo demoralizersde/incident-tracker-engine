@@ -16,10 +16,11 @@ public class IncidentEnums {
     }
 
     public enum Service {
-        PAYMENT_SERVICE,
+        PAYMENTS_SERVICE,
         ORDER_SERVICE,
-        AUTH_SERVICE,
-        NOTIFICATION_SERVICE,
-        INVENTORY_SERVICE
+        DATABASE,
+        FRONTEND,
+        BACKEND,
+        API_GATEWAY
     }
 }

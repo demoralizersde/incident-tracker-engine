@@ -2,10 +2,12 @@ package incidentengine.validator;
 
 import incidentengine.enums.IncidentEnums;
 import incidentengine.exception.InvalidRequestException;
+import org.springframework.stereotype.Component;
 
-public class EnumValidator {
+@Component
+public class RequestValidator {
 
-    public static IncidentEnums.Severity validateSeverity(String value) {
+    public IncidentEnums.Severity validateSeverity(String value) {
         try {
             return IncidentEnums.Severity.valueOf(value.toUpperCase());
         } catch (Exception ex) {
@@ -13,7 +15,7 @@ public class EnumValidator {
         }
     }
 
-    public static IncidentEnums.Service validateService(String value) {
+    public IncidentEnums.Service validateService(String value) {
         try {
             return IncidentEnums.Service.valueOf(value.toUpperCase());
         } catch (Exception ex) {
@@ -21,7 +23,7 @@ public class EnumValidator {
         }
     }
 
-    public static IncidentEnums.Status validateStatus(String value) {
+    public IncidentEnums.Status validateStatus(String value) {
         try {
             return IncidentEnums.Status.valueOf(value.toUpperCase());
         } catch (Exception ex) {

@@ -18,5 +18,7 @@ public interface IncidentService {
 
     Incident getIncidentById(Long id);
 
+    Incident updateStatus(Long id, String newStatus);
+
 
 }

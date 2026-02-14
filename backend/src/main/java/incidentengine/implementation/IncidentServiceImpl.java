@@ -6,7 +6,8 @@ import incidentengine.enums.IncidentEnums;
 import incidentengine.exception.ResourceNotFoundException;
 import incidentengine.repository.IncidentRepository;
 import incidentengine.service.IncidentService;
-import incidentengine.validator.EnumValidator;
+import incidentengine.validator.RequestValidator;
+import incidentengine.validator.ValidateStateTransition;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,15 +19,17 @@ import java.util.Date;
 public class IncidentServiceImpl implements IncidentService {
 
     private final IncidentRepository incidentRepository;
+    private final ValidateStateTransition validateStatusTransition;
+    private final RequestValidator requestValidator;
 
     @Override
     public Incident createIncident(IncidentCreateRequestDto req) {
 
         IncidentEnums.Service service =
-                EnumValidator.validateService(req.getService());
+                requestValidator.validateService(req.getService());
 
         IncidentEnums.Severity severity =
-                EnumValidator.validateSeverity(req.getSeverity());
+               requestValidator.validateSeverity(req.getSeverity());
 
         Incident incident = Incident.builder()
                 .title(req.getTitle())
@@ -60,6 +63,18 @@ public class IncidentServiceImpl implements IncidentService {
                         new ResourceNotFoundException("Incident not found with id: " + id));
     }
 
+    @Override
+    public Incident updateStatus(Long id, String newStatus) {
 
+        Incident incident = incidentRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Incident not found with id: " + id));
 
+        validateStatusTransition.validate(incident.getStatus(), newStatus);
+
+        incident.setStatus(newStatus.toUpperCase());
+        incident.setUpdatedAt(new Date());
+
+        return incidentRepository.save(incident);
+    }
 }

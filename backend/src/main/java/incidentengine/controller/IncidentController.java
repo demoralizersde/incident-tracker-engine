@@ -7,7 +7,6 @@ import incidentengine.dto.PageResponseDto;
 import incidentengine.entity.Incident;
 import incidentengine.service.IncidentService;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -63,5 +62,19 @@ public class IncidentController {
                         "Incident fetched successfully", incident)
         );
     }
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<ApiResponse<Incident>> updateStatus(
+            @PathVariable Long id,
+            @RequestParam(required = true) String status) {
+
+        Incident incident = incidentService.updateStatus(id, status);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, 200,
+                        "Incident status updated successfully", incident)
+        );
+    }
+
+
 
 }
