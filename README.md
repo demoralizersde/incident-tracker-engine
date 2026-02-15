@@ -284,6 +284,11 @@ If given additional time, the following enhancements would be implemented to mak
 * Automatically send reminders or reports to the assigned owner if incidents remain unresolved beyond a defined threshold.
 * Generate daily summary reports for operational visibility.
 
+### Configuration / Metadata API
+
+* Introduce an API to fetch static configuration data such as available services, severities, and status values.
+* This would allow the frontend to dynamically populate dropdowns instead of relying on hardcoded values, improving flexibility and maintainability.
+
 ### Security & Access Control
 
 * Add authentication and role-based authorization (Admin / Engineer roles).
