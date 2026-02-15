@@ -2,7 +2,6 @@ package incidentengine.validator;
 
 import incidentengine.exception.InvalidRequestException;
 import org.springframework.stereotype.Component;
-
 import static incidentengine.enums.IncidentEnums.Status.*;
 
 @Component
