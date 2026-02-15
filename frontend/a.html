@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incident Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #2563eb;
+        }
+
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 8px 8px 0 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 16px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .tab-btn.active {
+            background: #2563eb;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 24px;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            min-height: 500px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* List Styles */
+        .filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+
+        .filter-input,
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .filter-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .incidents-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
+        .incidents-table th,
+        .incidents-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .incidents-table th {
+            background: #f9fafb;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-open { background: #fef3c7; color: #92400e; }
+        .status-mitigated { background: #dbeafe; color: #1e40af; }
+        .status-resolved { background: #dcfce7; color: #166534; }
+
+        .severity-sev1 { background: #fee2e2; color: #dc2626; }
+        .severity-sev2 { background: #fed7aa; color: #c2410c; }
+        .severity-sev3 { background: #fef3c7; color: #92400e; }
+        .severity-sev4 { background: #d1fae5; color: #065f46; }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-secondary { background: #6b7280; color: white; }
+        .btn-secondary:hover { background: #4b5563; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-success:hover { background: #059669; }
+        .btn-disabled { background: #9ca3af; color: #6b7280; cursor: not-allowed; }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .page-size-select {
+            padding: 6px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .page-btn {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            background: white;
+            color: #374151;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .page-btn:hover:not(.disabled) {
+            background: #f3f4f6;
+        }
+
+        .page-btn.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .page-btn.disabled {
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        /* Detail Styles */
+        .incident-detail {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .detail-field {
+            margin-bottom: 16px;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .detail-value {
+            background: #f9fafb;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .status-update-disabled {
+            background: #f3f4f6;
+            color: #9ca3af;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 12px; }
+            .filters { flex-direction: column; align-items: stretch; }
+            .filter-btn { align-self: stretch; }
+            .incident-detail { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            .incidents-table { font-size: 14px; }
+            .incidents-table th,
+            .incidents-table td { padding: 8px 4px; }
+            .pagination { flex-direction: column; gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Incident Tracker</h1>
+        <p>Manage and track incidents efficiently</p>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="list">Incident List</button>
+        <button class="tab-btn" data-tab="detail">Incident Detail</button>
+        <button class="tab-btn" data-tab="create">Create Incident</button>
+    </div>
+
+    <!-- Incident List Tab -->
+    <div id="list" class="tab-content active">
+        <div id="list-message"></div>
+        <div class="filters">
+            <select class="filter-select" id="filter-service">
+                <option value="">All Services</option>
+                <option value="payments_service">Payments Service</option>
+                <option value="order_service">Order Service</option>
+                <option value="database">Database</option>
+                <option value="frontend">Frontend</option>
+                <option value="backend">Backend</option>
+                <option value="api_gateway">API Gateway</option>
+            </select>
+            <select class="filter-select" id="filter-severity">
+                <option value="">All Severities</option>
+                <option value="SEV1">SEV1</option>
+                <option value="SEV2">SEV2</option>
+                <option value="SEV3">SEV3</option>
+                <option value="SEV4">SEV4</option>
+            </select>
+            <select class="filter-select" id="filter-status">
+                <option value="">All Statuses</option>
+                <option value="OPEN">OPEN</option>
+                <option value="MITIGATED">MITIGATED</option>
+                <option value="RESOLVED">RESOLVED</option>
+            </select>
+            <button class="filter-btn" onclick="loadIncidents()">Filter</button>
+            <button class="filter-btn" onclick="clearFilters()">Clear</button>
+        </div>
+        <div id="incidents-loading" class="loading">Loading incidents...</div>
+        <table id="incidents-table" class="incidents-table" style="display: none;">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Service</th>
+                <th>Severity</th>
+                <th>Status</th>
+                <th>Assigned To</th>
+                <th>Created At</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <div id="pagination-container" style="display: none;"></div>
+    </div>
+
+    <!-- Incident Detail Tab -->
+    <div id="detail" class="tab-content">
+        <div id="detail-message"></div>
+        <div id="detail-loading" class="loading" style="display: none;">Loading incident...</div>
+        <div id="incident-detail" style="display: none;">
+            <div class="incident-detail">
+                <div>
+                    <div class="detail-field">
+                        <span class="detail-label">Title</span>
+                        <div id="detail-title" class="detail-value"></div>
+                    </div>
+                    <div class="detail-field">
+                        <span class="detail-label">Service</span>
+                        <div id="detail-service" class="detail-value"></div>
+                    </div>
+                    <div class="detail-field">
+                        <span class="detail-label">Severity</span>
+                        <div id="detail-severity" class="detail-value"></div>
+                    </div>
+                    <div class="detail-field">
+                        <span class="detail-label">Status</span>
+                        <div id="detail-status" class="detail-value"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="detail-field">
+                        <span class="detail-label">Assigned To</span>
+                        <div id="detail-assignedTo" class="detail-value"></div>
+                    </div>
+                    <div class="detail-field">
+                        <span class="detail-label">Created At</span>
+                        <div id="detail-createdAt" class="detail-value"></div>
+                    </div>
+                    <div class="detail-field">
+                        <span class="detail-label">Updated At</span>
+                        <div id="detail-updatedAt" class="detail-value"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="status-update-section" style="margin-top: 24px;">
+                <label class="form-label">Update Status</label>
+                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <select id="status-update" class="form-input" style="width: auto; min-width: 150px;">
+                        <option value="">Select status</option>
+                        <option value="OPEN">OPEN</option>
+                        <option value="MITIGATED">MITIGATED</option>
+                        <option value="RESOLVED">RESOLVED</option>
+                    </select>
+                    <button class="btn btn-success" onclick="updateStatus()" id="update-status-btn" disabled>Update Status</button>
+                </div>
+                <div id="resolved-message" class="status-update-disabled" style="display: none;">
+                    Status updates are disabled for RESOLVED incidents
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Incident Tab -->
+    <div id="create" class="tab-content">
+        <div id="create-message"></div>
+        <form id="create-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Title *</label>
+                    <input type="text" class="form-input" id="title" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Service *</label>
+                    <select class="form-select" id="service" required>
+                        <option value="">Select service</option>
+                        <option value="payments_service">Payments Service</option>
+                        <option value="order_service">Order Service</option>
+                        <option value="database">Database</option>
+                        <option value="frontend">Frontend</option>
+                        <option value="backend">Backend</option>
+                        <option value="api_gateway">API Gateway</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Severity *</label>
+                    <select class="form-select" id="severity" required>
+                        <option value="">Select severity</option>
+                        <option value="SEV1">SEV1</option>
+                        <option value="SEV2">SEV2</option>
+                        <option value="SEV3">SEV3</option>
+                        <option value="SEV4">SEV4</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Assigned To</label>
+                    <input type="text" class="form-input" id="assignedTo">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea class="form-input" id="description" rows="4" placeholder="Describe the incident..."></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="switchTab('list')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Incident</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://localhost:8080/api/incidents';
+    let currentIncidentId = null;
+    let currentPage = 0;
+    let pageSize = 10;
+    let totalElements = 0;
+    let incidents = [];
+    let currentIncidentStatus = null;
+
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            switchTab(btn.dataset.tab);
+        });
+    });
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(tabName).classList.add('active');
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+        if (tabName === 'list') {
+            loadIncidents();
+        } else if (tabName === 'detail' && currentIncidentId) {
+            loadIncident(currentIncidentId);
+        }
+    }
+
+    // Load incidents list with pagination
+    async function loadIncidents() {
+        const service = document.getElementById('filter-service').value;
+        const severity = document.getElementById('filter-severity').value;
+        const status = document.getElementById('filter-status').value;
+
+        showLoading('incidents-loading');
+        hideMessage('list-message');
+
+        try {
+            const params = new URLSearchParams();
+            if (service) params.append('service', service);
+            if (severity) params.append('severity', severity);
+            if (status) params.append('status', status);
+            params.append('page', currentPage);
+            params.append('size', pageSize);
+            params.append('sort', 'createdAt,desc');
+
+            const response = await fetch(`${API_BASE}?${params}`);
+            const data = await handleApiResponse(response);
+
+            incidents = data.content || [];
+            totalElements = data.totalElements || 0;
+            renderIncidents();
+            renderPagination();
+        } catch (error) {
+            showError('list-message', error.message);
+            hideLoading('incidents-loading');
+        }
+    }
+
+    function renderIncidents() {
+        const tbody = document.querySelector('#incidents-table tbody');
+        const table = document.getElementById('incidents-table');
+        hideLoading('incidents-loading');
+
+        if (incidents.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">No incidents found</td></tr>';
+            table.style.display = 'table';
+            document.getElementById('pagination-container').style.display = 'none';
+            return;
+        }
+
+        tbody.innerHTML = incidents.map(incident => `
+            <tr>
+                <td>${incident.id}</td>
+                <td>${incident.title}</td>
+                <td>${incident.service || '-'}</td>
+                <td><span class="status-badge severity-sev${incident.severity?.substring(3) || ''}">${incident.severity || '-'}</span></td>
+                <td><span class="status-badge status-${incident.status?.toLowerCase() || 'unknown'}">${incident.status || 'UNKNOWN'}</span></td>
+                <td>${incident.assignedTo || '-'}</td>
+                <td>${new Date(incident.createdAt).toLocaleString()}</td>
+                <td class="actions">
+                    <button class="btn btn-primary" onclick="showDetail(${incident.id})">View</button>
+                </td>
+            </tr>
+        `).join('');
+
+        table.style.display = 'table';
+    }
+
+    function renderPagination() {
+        const container = document.getElementById('pagination-container');
+        const totalPages = Math.ceil(totalElements / pageSize);
+
+        if (totalPages <= 1) {
+            container.style.display = 'none';
+            return;
+        }
+
+        let pagesHtml = '';
+        const maxVisiblePages = 5;
+        let startPage = Math.max(0, currentPage - Math.floor(maxVisiblePages / 2));
+        let endPage = Math.min(totalPages - 1, startPage + maxVisiblePages - 1);
+
+        if (endPage - startPage + 1 < maxVisiblePages) {
+            startPage = Math.max(0, endPage - maxVisiblePages + 1);
+        }
+
+        // Previous button
+        pagesHtml += `
+            <button class="page-btn ${currentPage === 0 ? 'disabled' : ''}"
+                    onclick="changePage(${currentPage - 1})"
+                    ${currentPage === 0 ? 'disabled' : ''}>
+                Previous
+            </button>
+        `;
+
+        // Page numbers
+        for (let i = startPage; i <= endPage; i++) {
+            pagesHtml += `
+                <button class="page-btn ${i === currentPage ? 'active' : ''}"
+                        onclick="changePage(${i})">
+                    ${i + 1}
+                </button>
+            `;
+        }
+
+        // Next button
+        pagesHtml += `
+            <button class="page-btn ${currentPage === totalPages - 1 ? 'disabled' : ''}"
+                    onclick="changePage(${currentPage + 1})"
+                    ${currentPage === totalPages - 1 ? 'disabled' : ''}>
+                Next
+            </button>
+        `;
+
+        container.innerHTML = `
+            <div class="pagination-info">
+                Showing ${(currentPage * pageSize) + 1} to
+                ${Math.min((currentPage + 1) * pageSize, totalElements)} of ${totalElements} incidents
+            </div>
+            <div class="pagination-controls">
+                <select class="page-size-select" onchange="changePageSize(this.value)">
+                    <option value="5" ${pageSize === 5 ? 'selected' : ''}>5 per page</option>
+                    <option value="10" ${pageSize === 10 ? 'selected' : ''}>10 per page</option>
+                    <option value="25" ${pageSize === 25 ? 'selected' : ''}>25 per page</option>
+                    <option value="50" ${pageSize === 50 ? 'selected' : ''}>50 per page</option>
+                </select>
+                <div>${pagesHtml}</div>
+            </div>
+        `;
+        container.style.display = 'flex';
+    }
+
+    function changePage(page) {
+        currentPage = page;
+        loadIncidents();
+    }
+
+    function changePageSize(size) {
+        pageSize = parseInt(size);
+        currentPage = 0;
+        loadIncidents();
+    }
+
+    // Load single incident
+    async function loadIncident(id) {
+        showLoading('detail-loading');
+        hideMessage('detail-message');
+        document.getElementById('incident-detail').style.display = 'none';
+
+        try {
+            const response = await fetch(`${API_BASE}/${id}`);
+            const data = await handleApiResponse(response);
+            renderDetail(data);
+            currentIncidentId = id;
+            currentIncidentStatus = data.status;
+            document.getElementById('status-update').value = data.status || '';
+            checkStatusUpdatePermission();
+        } catch (error) {
+            showError('detail-message', error.message);
+        }
+    }
+
+    function renderDetail(incident) {
+        hideLoading('detail-loading');
+        document.getElementById('detail-title').textContent = incident.title;
+        document.getElementById('detail-service').textContent = incident.service || '-';
+        document.getElementById('detail-severity').innerHTML = `<span class="status-badge severity-sev${incident.severity?.substring(3) || ''}">${incident.severity || '-'}</span>`;
+        document.getElementById('detail-status').innerHTML = `<span class="status-badge status-${incident.status?.toLowerCase() || 'unknown'}">${incident.status || '-'}</span>`;
+        document.getElementById('detail-assignedTo').textContent = incident.assignedTo || '-';
+        document.getElementById('detail-createdAt').textContent = new Date(incident.createdAt).toLocaleString();
+        document.getElementById('detail-updatedAt').textContent = incident.updatedAt ? new Date(incident.updatedAt).toLocaleString() : '-';
+        document.getElementById('incident-detail').style.display = 'block';
+    }
+
+    // Check if status update is allowed
+    function checkStatusUpdatePermission() {
+        const btn = document.getElementById('update-status-btn');
+        const select = document.getElementById('status-update');
+        const resolvedMessage = document.getElementById('resolved-message');
+        const statusSection = document.getElementById('status-update-section');
+
+        if (currentIncidentStatus === 'RESOLVED') {
+            // Disable everything for RESOLVED incidents
+            select.disabled = true;
+            btn.disabled = true;
+            btn.className = 'btn btn-success btn-disabled';
+            resolvedMessage.style.display = 'block';
+        } else {
+            // Enable for non-RESOLVED incidents
+            select.disabled = false;
+            btn.disabled = !select.value;
+            btn.className = btn.disabled ? 'btn btn-success btn-disabled' : 'btn btn-success';
+            resolvedMessage.style.display = 'none';
+        }
+    }
+
+    // Update status button toggle (only for non-resolved)
+    function toggleUpdateBtn() {
+        if (currentIncidentStatus === 'RESOLVED') return;
+
+        const btn = document.getElementById('update-status-btn');
+        const select = document.getElementById('status-update');
+        btn.disabled = !select.value;
+        btn.className = btn.disabled ? 'btn btn-success btn-disabled' : 'btn btn-success';
+    }
+
+    document.getElementById('status-update').addEventListener('change', toggleUpdateBtn);
+
+    // Update status
+    async function updateStatus() {
+        const status = document.getElementById('status-update').value;
+        if (!status || !currentIncidentId || currentIncidentStatus === 'RESOLVED') return;
+
+        if (!confirm(`Update status to ${status}?`)) return;
+
+        try {
+            const response = await fetch(`${API_BASE}/${currentIncidentId}/status?status=${status}`, {
+                method: 'PATCH'
+            });
+            await handleApiResponse(response);
+            showSuccess('detail-message', 'Status updated successfully');
+            loadIncident(currentIncidentId);
+            loadIncidents();
+        } catch (error) {
+            showError('detail-message', error.message);
+        }
+    }
+
+    // Create incident
+    document.getElementById('create-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = {
+            title: document.getElementById('title').value,
+            service: document.getElementById('service').value,
+            severity: document.getElementById('severity').value,
+            assignedTo: document.getElementById('assignedTo').value,
+            description: document.getElementById('description').value
+        };
+
+        try {
+            const response = await fetch(API_BASE, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            await handleApiResponse(response);
+            showSuccess('create-message', 'Incident created successfully');
+            document.getElementById('create-form').reset();
+            setTimeout(() => switchTab('list'), 1500);
+        } catch (error) {
+            showError('create-message', error.message);
+        }
+    });
+
+    // API Response Handler
+    async function handleApiResponse(response) {
+        const data = await response.json();
+
+        if (!data.status) {
+            const msg = data.msg || 'Unknown error occurred';
+            throw new Error(msg);
+        }
+
+        return data.data;
+    }
+
+    // Utility functions
+    function showDetail(id) {
+        currentIncidentId = id;
+        switchTab('detail');
+    }
+
+    function clearFilters() {
+        document.getElementById('filter-service').value = '';
+        document.getElementById('filter-severity').value = '';
+        document.getElementById('filter-status').value = '';
+        currentPage = 0;
+        loadIncidents();
+    }
+
+    function showLoading(id) {
+        document.getElementById(id).style.display = 'block';
+    }
+
+    function hideLoading(id) {
+        document.getElementById(id).style.display = 'none';
+    }
+
+    function showMessage(id, type, message) {
+        const el = document.getElementById(id);
+        el.className = type;
+        el.textContent = message;
+        el.style.display = 'block';
+    }
+
+    function showError(id, message) {
+        showMessage(id, 'error', message);
+    }
+
+    function showSuccess(id, message) {
+        showMessage(id, 'success', message);
+        setTimeout(() => {
+            document.getElementById(id).style.display = 'none';
+        }, 3000);
+    }
+
+    function hideMessage(id) {
+        document.getElementById(id).style.display = 'none';
+    }
+
+    // Initial load
+    loadIncidents();
+</script>
+</body>
+</html>
